@@ -23,4 +23,19 @@ public final class ExamKit: @unchecked Sendable {
     public static func getTickets(for category: ExamCategory) throws -> [Ticket] {
         try shared.dataService.loadTickets(for: category)
     }
+    
+    /// Метод возвращает все вопросы для категории
+    /// - Parameter category: категория билетов
+    /// - Returns: массив всех вопросов (800 вопросов для категории)
+    public static func getAllQuestions(for category: ExamCategory) throws -> [Question] {
+        let tickets = try shared.dataService.loadTickets(for: category)
+        return tickets.flatMap { $0.questions }
+    }
+    
+    /// Метод возвращает все темы для категории
+    /// - Parameter category: категория билетов
+    /// - Returns: массив тем с вопросами
+    public static func getTopics(for category: ExamCategory) throws -> [Topic] {
+        try shared.dataService.loadTopics(for: category)
+    }
 }
