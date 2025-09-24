@@ -17,4 +17,3 @@ public struct Answer: Codable {
         case isCorrect = "is_correct"
     }
 }
-

@@ -10,6 +10,7 @@ import Foundation
 public enum ExamKitError: Error, LocalizedError {
     case bundleNotFound
     case ticketsDirectoryNotFound
+    case topicsDirectoryNotFound
     case imageNotFound
     case invalidData
     
@@ -19,6 +20,8 @@ public enum ExamKitError: Error, LocalizedError {
                 "Bundle not found"
             case .ticketsDirectoryNotFound:
                 "Tickets directory not found"
+            case .topicsDirectoryNotFound:
+                "Topics directory not found"
             case .imageNotFound:
                 "Image not found"
             case .invalidData:

@@ -36,9 +36,30 @@ public final class DataService {
         return try loadTicketsFromFiles(ticketFiles, in: ticketsPath, for: category)
     }
     
+    /// Load topics for a specific category
+    /// - Parameter category: The exam category
+    /// - Returns: Array of topics
+    /// - Throws: ExamKitError if loading fails
+    public func loadTopics(for category: ExamCategory) throws -> [Topic] {
+        let topicsPath = "\(basePath)/questions/\(category.folderName)/topics"
+        
+        guard fileManager.fileExists(atPath: topicsPath) else {
+            throw ExamKitError.topicsDirectoryNotFound
+        }
+        
+        let topicFiles = try getTopicFiles(from: topicsPath)
+        return try loadTopicsFromFiles(topicFiles, in: topicsPath, for: category)
+    }
+    
     // MARK: - Private Methods
     
     private func getTicketFiles(from path: String) throws -> [String] {
+        return try fileManager.contentsOfDirectory(atPath: path)
+            .filter { $0.hasSuffix(".json") }
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+    }
+    
+    private func getTopicFiles(from path: String) throws -> [String] {
         return try fileManager.contentsOfDirectory(atPath: path)
             .filter { $0.hasSuffix(".json") }
             .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
@@ -58,5 +79,21 @@ public final class DataService {
         }
         
         return tickets
+    }
+    
+    private func loadTopicsFromFiles(_ files: [String], in path: String, for category: ExamCategory) throws -> [Topic] {
+        var topics: [Topic] = []
+        
+        for file in files {
+            let topicPath = "\(path)/\(file)"
+            let topicData = try Data(contentsOf: URL(fileURLWithPath: topicPath))
+            let questions = try JSONDecoder().decode([Question].self, from: topicData)
+            
+            let topicTitle = file.replacingOccurrences(of: ".json", with: "")
+            let topic = Topic(title: topicTitle, category: category, questions: questions)
+            topics.append(topic)
+        }
+        
+        return topics
     }
 }

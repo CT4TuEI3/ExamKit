@@ -48,6 +48,38 @@ final class ExamKitTests: XCTestCase {
         XCTAssertGreaterThan(tickets.count, 0)
     }
     
+    func testLoadTopicsForAB() throws {
+        let topics = try ExamKit.getTopics(for: .abm)
+        XCTAssertGreaterThan(topics.count, 0)
+        XCTAssertEqual(topics.first?.category, .abm)
+        
+        // Проверяем что у каждой темы есть вопросы
+        for topic in topics {
+            XCTAssertGreaterThan(topic.questions.count, 0)
+            // Проверяем что ticketNumber может быть nil для вопросов тем
+            for question in topic.questions {
+                XCTAssertNotNil(question.originalID)
+                XCTAssertFalse(question.originalID.isEmpty)
+            }
+        }
+    }
+    
+    func testLoadTopicsForCD() throws {
+        let topics = try ExamKit.getTopics(for: .cd)
+        XCTAssertGreaterThan(topics.count, 0)
+        XCTAssertEqual(topics.first?.category, .cd)
+        
+        // Проверяем что у каждой темы есть вопросы
+        for topic in topics {
+            XCTAssertGreaterThan(topic.questions.count, 0)
+            // Проверяем что ticketNumber может быть nil для вопросов тем
+            for question in topic.questions {
+                XCTAssertNotNil(question.originalID)
+                XCTAssertFalse(question.originalID.isEmpty)
+            }
+        }
+    }
+    
     #if canImport(UIKit)
     func testQuestionImageLoading() throws {
         let tickets = try ExamKit.getTickets(for: .ab)
