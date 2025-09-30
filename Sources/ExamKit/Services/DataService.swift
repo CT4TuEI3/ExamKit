@@ -11,66 +11,64 @@ public final class DataService {
     public static let shared = DataService()
     
     private let fileManager = FileManager.default
-    private var basePath: String {
-        // Получаем путь к текущему файлу и поднимаемся до Sources/ExamKit/Resources
-        let currentFile = #file
-        let currentDir = URL(fileURLWithPath: currentFile).deletingLastPathComponent()
-        let examKitDir = currentDir.deletingLastPathComponent()
-        return "\(examKitDir.path)/Resources"
+    private var bundle: Bundle {
+        Bundle.module
     }
     
     private init() {}
-    
-    /// Load tickets for a specific category
-    /// - Parameter category: The exam category
-    /// - Returns: Array of tickets
-    /// - Throws: ExamKitError if loading fails
-    public func loadTickets(for category: ExamCategory) throws -> [Ticket] {
-        let ticketsPath = "\(basePath)/questions/\(category.folderName)/tickets"
+}
+
+// MARK: - Public methods
+
+public
+extension DataService {
+    func loadTickets(for category: ExamCategory) throws -> [Ticket] {
+        let ticketsResourcePath = "Resources/questions/\(category.folderName)/tickets"
         
-        guard fileManager.fileExists(atPath: ticketsPath) else {
+        guard let ticketsURL = bundle.url(forResource: ticketsResourcePath, withExtension: nil) else {
             throw ExamKitError.ticketsDirectoryNotFound
         }
         
-        let ticketFiles = try getTicketFiles(from: ticketsPath)
-        return try loadTicketsFromFiles(ticketFiles, in: ticketsPath, for: category)
+        let ticketFiles = try getTicketFiles(from: ticketsURL)
+        return try loadTicketsFromFiles(ticketFiles, in: ticketsURL, for: category)
     }
     
-    /// Load topics for a specific category
-    /// - Parameter category: The exam category
-    /// - Returns: Array of topics
-    /// - Throws: ExamKitError if loading fails
-    public func loadTopics(for category: ExamCategory) throws -> [Topic] {
-        let topicsPath = "\(basePath)/questions/\(category.folderName)/topics"
+    func loadTopics(for category: ExamCategory) throws -> [Topic] {
+        let topicsResourcePath = "Resources/questions/\(category.folderName)/topics"
         
-        guard fileManager.fileExists(atPath: topicsPath) else {
+        guard let topicsURL = bundle.url(forResource: topicsResourcePath, withExtension: nil) else {
             throw ExamKitError.topicsDirectoryNotFound
         }
         
-        let topicFiles = try getTopicFiles(from: topicsPath)
-        return try loadTopicsFromFiles(topicFiles, in: topicsPath, for: category)
+        let topicFiles = try getTopicFiles(from: topicsURL)
+        return try loadTopicsFromFiles(topicFiles, in: topicsURL, for: category)
     }
-    
-    // MARK: - Private Methods
-    
-    private func getTicketFiles(from path: String) throws -> [String] {
-        return try fileManager.contentsOfDirectory(atPath: path)
+}
+
+// MARK: - Private Methods
+
+private
+extension DataService {
+    func getTicketFiles(from url: URL) throws -> [String] {
+        return try fileManager.contentsOfDirectory(atPath: url.path)
             .filter { $0.hasSuffix(".json") }
             .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
     }
     
-    private func getTopicFiles(from path: String) throws -> [String] {
-        return try fileManager.contentsOfDirectory(atPath: path)
+    func getTopicFiles(from url: URL) throws -> [String] {
+        return try fileManager.contentsOfDirectory(atPath: url.path)
             .filter { $0.hasSuffix(".json") }
             .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
     }
     
-    private func loadTicketsFromFiles(_ files: [String], in path: String, for category: ExamCategory) throws -> [Ticket] {
+    func loadTicketsFromFiles(_ files: [String],
+                              in url: URL,
+                              for category: ExamCategory) throws -> [Ticket] {
         var tickets: [Ticket] = []
         
         for file in files {
-            let ticketPath = "\(path)/\(file)"
-            let ticketData = try Data(contentsOf: URL(fileURLWithPath: ticketPath))
+            let ticketURL = url.appendingPathComponent(file)
+            let ticketData = try Data(contentsOf: ticketURL)
             let questions = try JSONDecoder().decode([Question].self, from: ticketData)
             
             let ticketNumber = file.replacingOccurrences(of: ".json", with: "")
@@ -81,12 +79,14 @@ public final class DataService {
         return tickets
     }
     
-    private func loadTopicsFromFiles(_ files: [String], in path: String, for category: ExamCategory) throws -> [Topic] {
+    func loadTopicsFromFiles(_ files: [String],
+                             in url: URL,
+                             for category: ExamCategory) throws -> [Topic] {
         var topics: [Topic] = []
         
         for file in files {
-            let topicPath = "\(path)/\(file)"
-            let topicData = try Data(contentsOf: URL(fileURLWithPath: topicPath))
+            let topicURL = url.appendingPathComponent(file)
+            let topicData = try Data(contentsOf: topicURL)
             let questions = try JSONDecoder().decode([Question].self, from: topicData)
             
             let topicTitle = file.replacingOccurrences(of: ".json", with: "")
