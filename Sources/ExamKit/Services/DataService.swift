@@ -11,21 +11,22 @@ public final class DataService {
     public static let shared = DataService()
     
     private let fileManager = FileManager.default
-    private var bundle: Bundle {
-        Bundle.module
-    }
     
     private init() {}
 }
 
-// MARK: - Public methods
+// MARK: - Public Methods
 
 public
 extension DataService {
     func loadTickets(for category: ExamCategory) throws -> [Ticket] {
-        let ticketsResourcePath = "Resources/questions/\(category.folderName)/tickets"
+        let ticketsResourcePath = "questions/\(category.folderName)/tickets"
         
-        guard let ticketsURL = bundle.url(forResource: ticketsResourcePath, withExtension: nil) else {
+        guard BundleHelper.directoryExists(atResourcePath: ticketsResourcePath) else {
+            throw ExamKitError.ticketsDirectoryNotFound
+        }
+        
+        guard let ticketsURL = BundleHelper.url(forResource: ticketsResourcePath) else {
             throw ExamKitError.ticketsDirectoryNotFound
         }
         
@@ -34,9 +35,13 @@ extension DataService {
     }
     
     func loadTopics(for category: ExamCategory) throws -> [Topic] {
-        let topicsResourcePath = "Resources/questions/\(category.folderName)/topics"
+        let topicsResourcePath = "questions/\(category.folderName)/topics"
         
-        guard let topicsURL = bundle.url(forResource: topicsResourcePath, withExtension: nil) else {
+        guard BundleHelper.directoryExists(atResourcePath: topicsResourcePath) else {
+            throw ExamKitError.topicsDirectoryNotFound
+        }
+        
+        guard let topicsURL = BundleHelper.url(forResource: topicsResourcePath) else {
             throw ExamKitError.topicsDirectoryNotFound
         }
         
@@ -79,9 +84,7 @@ extension DataService {
         return tickets
     }
     
-    func loadTopicsFromFiles(_ files: [String],
-                             in url: URL,
-                             for category: ExamCategory) throws -> [Topic] {
+    func loadTopicsFromFiles(_ files: [String], in url: URL, for category: ExamCategory) throws -> [Topic] {
         var topics: [Topic] = []
         
         for file in files {

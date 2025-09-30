@@ -20,9 +20,6 @@ public final class ImageService {
     // MARK: - Private properties
     
     private let fileManager = FileManager.default
-    private var bundle: Bundle {
-        Bundle.module
-    }
     
     // MARK: - Init
     
@@ -48,9 +45,9 @@ extension ImageService {
             return nil
         }
         
-        let imageResourcePath = "Resources/images/\(categoryFolder)/\(filename)"
+        let imageResourcePath = "images/\(categoryFolder)/\(filename)"
         
-        guard let imageURL = bundle.url(forResource: imageResourcePath, withExtension: nil) else {
+        guard let imageURL = BundleHelper.url(forResource: imageResourcePath) else {
             return nil
         }
         
