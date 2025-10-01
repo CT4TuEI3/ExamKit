@@ -24,4 +24,3 @@ public struct Topic: Identifiable {
         self.questions = questions
     }
 }
-

@@ -19,7 +19,13 @@ import ExamKit
 let tickets = try ExamKit.getTickets(for: .abm)
 
 // Получение билетов для категории C,D
-let tickets = try ExamKit.getTickets(for: .cd)
+let tickets = try .getTickets(for: .cd)
+
+// Получение всех вопросов для категории
+let allQuestions = try ExamKit.getAllQuestions(for .abm)
+
+// Получение тем для категории
+let topics = try ExamKit.getTopics(for .cd)
 ```
 
 
@@ -27,7 +33,7 @@ let tickets = try ExamKit.getTickets(for: .cd)
 
 ### ExamCategory
 Перечисление категорий экзамена:
-- `.abm` - категории A, B
+- `.abm` - категории A, B, M
 - `.cd` - категории C, D
 
 ### Answer
@@ -47,7 +53,8 @@ let tickets = try ExamKit.getTickets(for: .cd)
 - `answerTip: String` - подсказка
 - `topic: [String]` - темы
 - `id: String` - уникальный идентификатор
-- `image: UIImage?` - **загруженное изображение (только для iOS)**
+- `image: UIImage?` - изображение вопроса **(для UIKit)**
+- `swiftUIImage: Image?` - изображение вопроса **(для SwiftUI)**
 
 ### Ticket
 Структура билета:
