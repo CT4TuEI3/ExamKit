@@ -10,32 +10,33 @@ import Foundation
 import UIKit
 #endif
 
-/// Сервис, отвечающий за загрузку изображений
+/// Service responsible for loading images
 public final class ImageService {
-    
-    // MARK: - Singleton
-    
     public static let shared = ImageService()
     
-    // MARK: - Private properties
-    
     private let fileManager = FileManager.default
-    
-    // MARK: - Init
+    private var basePath: String {
+        // Получаем путь к текущему файлу и поднимаемся до Sources/ExamKit/Resources/images
+        let currentFile = #file
+        let currentDir = URL(fileURLWithPath: currentFile).deletingLastPathComponent()
+        let examKitDir = currentDir.deletingLastPathComponent()
+        return "\(examKitDir.path)/Resources/images"
+    }
     
     private init() {}
-}
-
-// MARK: - Public Methods
-
-#if canImport(UIKit)
-public
-extension ImageService {
-    func loadImage(for question: Question) -> UIImage? {
+    
+    #if canImport(UIKit)
+    /// Load image for a question
+    /// - Parameter question: The question containing image path
+    /// - Returns: UIImage if found, nil otherwise
+    public func loadImage(for question: Question) -> UIImage? {
         return loadImage(from: question.imagePath)
     }
     
-    func loadImage(from imagePath: String) -> UIImage? {
+    /// Load image from image path string
+    /// - Parameter imagePath: The image path string
+    /// - Returns: UIImage if found, nil otherwise
+    public func loadImage(from imagePath: String) -> UIImage? {
         guard !imagePath.contains("no_image.jpg") else {
             return nil
         }
@@ -45,26 +46,23 @@ extension ImageService {
             return nil
         }
         
-        let imageResourcePath = "images/\(categoryFolder)/\(filename)"
+        let fullImagePath = "\(basePath)/\(categoryFolder)/\(filename)"
         
-        guard let imageURL = BundleHelper.url(forResource: imageResourcePath) else {
+        guard fileManager.fileExists(atPath: fullImagePath) else {
             return nil
         }
         
-        return UIImage(contentsOfFile: imageURL.path)
+        return UIImage(contentsOfFile: fullImagePath)
     }
-}
-#endif
-
-// MARK: - Private Methods
-
-private
-extension ImageService {
-    func extractFilename(from imagePath: String) -> String? {
+    #endif
+    
+    // MARK: - Private Methods
+    
+    private func extractFilename(from imagePath: String) -> String? {
         return imagePath.components(separatedBy: "/").last
     }
     
-    func extractCategoryFolder(from imagePath: String) -> String? {
+    private func extractCategoryFolder(from imagePath: String) -> String? {
         if imagePath.contains("A_B") {
             return "A_B"
         } else if imagePath.contains("C_D") {
