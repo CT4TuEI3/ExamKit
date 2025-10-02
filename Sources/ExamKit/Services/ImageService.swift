@@ -10,64 +10,58 @@ import Foundation
 import UIKit
 #endif
 
-/// Service responsible for loading images
+/// Сервис для загрузки изображений из ресурсов пакета
 public final class ImageService {
     public static let shared = ImageService()
     
-    private let fileManager = FileManager.default
-    private var basePath: String {
-        // Получаем путь к текущему файлу и поднимаемся до Sources/ExamKit/Resources/images
-        let currentFile = #file
-        let currentDir = URL(fileURLWithPath: currentFile).deletingLastPathComponent()
-        let examKitDir = currentDir.deletingLastPathComponent()
-        return "\(examKitDir.path)/Resources/images"
-    }
-    
     private init() {}
-    
-    #if canImport(UIKit)
-    /// Load image for a question
-    /// - Parameter question: The question containing image path
-    /// - Returns: UIImage if found, nil otherwise
+}
+
+// MARK: - Public Methods
+
+public
+extension ImageService {
+#if canImport(UIKit)
+    /// Загружает изображение для вопроса
+    /// - Parameter question: Экземпляр вопроса (`Question`)
+    /// - Returns: `UIImage`, если картинка найдена, или `nil` если картинка отсутствует
     public func loadImage(for question: Question) -> UIImage? {
         return loadImage(from: question.imagePath)
     }
     
-    /// Load image from image path string
-    /// - Parameter imagePath: The image path string
-    /// - Returns: UIImage if found, nil otherwise
+    /// Загружает изображение из строки пути
+    /// - Parameter imagePath: Путь из JSON (например `"./images/A_B/xxx.jpg"`)
+    /// - Returns: `UIImage`, если картинка найдена, или `nil`
     public func loadImage(from imagePath: String) -> UIImage? {
-        guard !imagePath.contains("no_image.jpg") else {
+        guard !imagePath.contains("no_image") else {
             return nil
         }
         
-        guard let filename = extractFilename(from: imagePath),
-              let categoryFolder = extractCategoryFolder(from: imagePath) else {
+        do {
+            let data = try Self.loadImageData(from: imagePath)
+            return UIImage(data: data)
+        } catch {
+#if DEBUG
+            print("⚠️ ImageService: не удалось загрузить \(imagePath), ошибка: \(error)")
+#endif
             return nil
         }
-        
-        let fullImagePath = "\(basePath)/\(categoryFolder)/\(filename)"
-        
-        guard fileManager.fileExists(atPath: fullImagePath) else {
-            return nil
-        }
-        
-        return UIImage(contentsOfFile: fullImagePath)
     }
-    #endif
+#endif
     
-    // MARK: - Private Methods
-    
-    private func extractFilename(from imagePath: String) -> String? {
-        return imagePath.components(separatedBy: "/").last
-    }
-    
-    private func extractCategoryFolder(from imagePath: String) -> String? {
-        if imagePath.contains("A_B") {
-            return "A_B"
-        } else if imagePath.contains("C_D") {
-            return "C_D"
+    /// Загружает бинарные данные изображения
+    /// - Parameter imagePath: Путь из JSON (например `"./images/C_D/abc.jpg"`)
+    /// - Returns: `Data` с содержимым картинки
+    /// - Throws: `ImageServiceError.imageNotFound`, если файл не найден
+    public static func loadImageData(from imagePath: String) throws -> Data {
+        let fileName = URL(fileURLWithPath: imagePath).lastPathComponent
+        let fileExtension = (fileName as NSString).pathExtension
+        let nameWithoutExt = (fileName as NSString).deletingPathExtension
+        
+        guard let url = Bundle.module.url(forResource: nameWithoutExt, withExtension: fileExtension) else {
+            throw ExamKitError.imageNotFound(fileName)
         }
-        return nil
+        
+        return try Data(contentsOf: url)
     }
 }
