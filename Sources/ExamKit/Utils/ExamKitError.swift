@@ -11,21 +11,21 @@ public enum ExamKitError: Error, LocalizedError {
     case bundleNotFound
     case ticketsDirectoryNotFound
     case topicsDirectoryNotFound
-    case imageNotFound
+    case imageNotFound(String)
     case invalidData
-    
+
     public var errorDescription: String? {
         switch self {
-            case .bundleNotFound:
-                "Bundle not found"
-            case .ticketsDirectoryNotFound:
-                "Tickets directory not found"
-            case .topicsDirectoryNotFound:
-                "Topics directory not found"
-            case .imageNotFound:
-                "Image not found"
-            case .invalidData:
-                "Invalid data format"
+        case .bundleNotFound:
+            return "Bundle не найден"
+        case .ticketsDirectoryNotFound:
+            return "Не найдена директория билетов"
+        case .topicsDirectoryNotFound:
+            return "Не найдена директория тем"
+        case .imageNotFound(let name):
+            return "Изображение не найдено: \(name)"
+        case .invalidData:
+            return "Некорректный формат данных"
         }
     }
 }
