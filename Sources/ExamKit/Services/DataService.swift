@@ -65,9 +65,38 @@ extension DataService {
         
         return topics
     }
+    
+    /// Загружает все дорожные знаки с сохранением порядка категорий из JSON
+    /// - Returns: Отсортированный массив категорий знаков
+    /// - Throws: `ExamKitError.signsFileNotFound`, если файл отсутствует или повреждён
+    func loadSigns() throws -> [SignCategory] {
+        guard let fileURL = Bundle.module.url(forResource: "signs", withExtension: "json") else {
+            throw ExamKitError.signsFileNotFound
+        }
+        
+        let data = try Data(contentsOf: fileURL)
+        
+        // Загружаем JSON с сохранением порядка ключей
+        guard let orderedCategories = try parseOrderedJSON(from: data) else {
+            throw ExamKitError.signsFileNotFound
+        }
+        
+        var categories: [SignCategory] = []
+        categories.reserveCapacity(orderedCategories.count)
+        
+        for (categoryName, categoryData) in orderedCategories {
+            guard let signsDict = categoryData as? [String: [String: Any]] else { continue }
+            
+            let signs = parseSigns(from: signsDict)
+            let sortedSigns = sortSignsByNumber(signs)
+            categories.append(SignCategory(name: categoryName, signs: sortedSigns))
+        }
+        
+        return categories
+    }
 }
 
-// MARK: - Private Helpers
+// MARK: - Private Methods
 
 private
 extension DataService {
@@ -106,14 +135,53 @@ extension DataService {
         return files
     }
     
-    /// Убирает префикс категории из имени файла
     func cleanName(_ filename: String, for category: ExamCategory) -> String {
         filename.replacingOccurrences(of: "\(category.folderName)_", with: "")
     }
     
-    /// Извлекает числовую часть из названия билета
     func extractNumber(_ name: String) -> Int {
         let digits = name.compactMap { $0.wholeNumberValue }
         return digits.isEmpty ? 0 : Int(digits.map(String.init).joined()) ?? 0
+    }
+    
+    func parseOrderedJSON(from data: Data) throws -> [(String, Any)]? {
+        guard let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary else {
+            return nil
+        }
+        
+        return jsonObject.compactMap { key, value in
+            guard let key = key as? String else { return nil }
+            return (key, value)
+        }
+    }
+    
+    func parseSigns(from dict: [String: [String: Any]]) -> [Sign] {
+        dict.compactMap { (_, signData) in
+            guard let number = signData["number"] as? String,
+                  let title = signData["title"] as? String,
+                  let image = signData["image"] as? String,
+                  let description = signData["description"] as? String else {
+                return nil
+            }
+            return Sign(number: number, title: title, imagePath: image, description: description)
+        }
+    }
+    
+    func sortSignsByNumber(_ signs: [Sign]) -> [Sign] {
+        signs.sorted { lhs, rhs in
+            compareSignNumbers(lhs.number, rhs.number)
+        }
+    }
+    
+    func compareSignNumbers(_ lhs: String, _ rhs: String) -> Bool {
+        let lhsParts = lhs.split(separator: ".").compactMap { Int($0) }
+        let rhsParts = rhs.split(separator: ".").compactMap { Int($0) }
+        
+        for (l, r) in zip(lhsParts, rhsParts) {
+            if l != r {
+                return l < r
+            }
+        }
+        return lhsParts.count < rhsParts.count
     }
 }

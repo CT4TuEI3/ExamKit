@@ -11,6 +11,7 @@ public enum ExamKitError: Error, LocalizedError {
     case bundleNotFound
     case ticketsDirectoryNotFound
     case topicsDirectoryNotFound
+    case signsFileNotFound
     case imageNotFound(String)
     case invalidData
 
@@ -22,6 +23,8 @@ public enum ExamKitError: Error, LocalizedError {
             return "Не найдена директория билетов"
         case .topicsDirectoryNotFound:
             return "Не найдена директория тем"
+        case .signsFileNotFound:
+            return "Файл signs.json не найден"
         case .imageNotFound(let name):
             return "Изображение не найдено: \(name)"
         case .invalidData:
