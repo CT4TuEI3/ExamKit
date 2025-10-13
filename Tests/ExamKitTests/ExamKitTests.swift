@@ -80,6 +80,51 @@ final class ExamKitTests: XCTestCase {
         }
     }
     
+    func testLoadMarkups() throws {
+        let markups = try ExamKit.getMarkups()
+        XCTAssertGreaterThan(markups.count, 0, "Должны быть категории разметки")
+        XCTAssertEqual(markups.count, 2, "Ожидается 2 категории: Горизонтальная и Вертикальная")
+        
+        for category in markups {
+            XCTAssertFalse(category.name.isEmpty, "Название категории не должно быть пустым")
+            XCTAssertGreaterThan(category.markups.count, 0, "В категории должны быть разметки")
+            
+            for markup in category.markups {
+                XCTAssertFalse(markup.number.isEmpty, "Номер разметки не должен быть пустым")
+                XCTAssertFalse(markup.description.isEmpty, "Описание разметки не должно быть пустым")
+                XCTAssertFalse(markup.imagePath.isEmpty, "Путь к изображению не должен быть пустым")
+                XCTAssertTrue(markup.imagePath.hasSuffix(".png"), "Изображения должны быть в формате PNG")
+            }
+        }
+    }
+    
+    func testMarkupsAreSorted() throws {
+        let markups = try ExamKit.getMarkups()
+        
+        for category in markups {
+            let numbers = category.markups.map { $0.number }
+            
+            // Проверяем, что номера идут в правильном порядке (1.1, 1.2, ..., 1.10, 1.11, ...)
+            for i in 0..<(numbers.count - 1) {
+                let current = numbers[i]
+                let next = numbers[i + 1]
+                
+                let currentParts = current.split(separator: ".").compactMap { Int($0) }
+                let nextParts = next.split(separator: ".").compactMap { Int($0) }
+                
+                // Проверяем, что следующий номер больше или равен текущему
+                if currentParts.count > 0 && nextParts.count > 0 {
+                    if currentParts[0] == nextParts[0] {
+                        if currentParts.count > 1 && nextParts.count > 1 {
+                            XCTAssertLessThanOrEqual(currentParts[1], nextParts[1], 
+                                "Разметки должны быть отсортированы: \(current) должен быть <= \(next)")
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
 #if canImport(UIKit)
     func testQuestionImageLoading() throws {
         let tickets = try ExamKit.getTickets(for: .abm)
@@ -96,6 +141,20 @@ final class ExamKitTests: XCTestCase {
             XCTAssertNoThrow({
                 _ = ImageService.shared.loadImage(for: firstQuestion)
             }())
+        }
+    }
+    
+    func testMarkupImageLoading() throws {
+        let markups = try ExamKit.getMarkups()
+        
+        if let firstMarkup = markups.first?.markups.first {
+            XCTAssertNoThrow({
+                _ = firstMarkup.image
+            }())
+            
+            // Проверяем, что хотя бы одно изображение загрузилось
+            let hasLoadedImage = markups.flatMap { $0.markups }.contains { $0.image != nil }
+            XCTAssertTrue(hasLoadedImage, "Хотя бы одно изображение разметки должно загрузиться")
         }
     }
 #endif

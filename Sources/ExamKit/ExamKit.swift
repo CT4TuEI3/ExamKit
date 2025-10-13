@@ -44,4 +44,10 @@ public final class ExamKit: @unchecked Sendable {
     public static func getSigns() throws -> [SignCategory] {
         try shared.dataService.loadSigns()
     }
+    
+    /// Метод возвращает всю дорожную разметку с группировкой по категориям
+    /// - Returns: массив категорий разметки
+    public static func getMarkups() throws -> [MarkupCategory] {
+        try shared.dataService.loadMarkups()
+    }
 }
