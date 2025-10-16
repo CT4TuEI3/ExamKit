@@ -38,4 +38,16 @@ public final class ExamKit: @unchecked Sendable {
     public static func getTopics(for category: ExamCategory) throws -> [Topic] {
         try shared.dataService.loadTopics(for: category)
     }
+    
+    /// Метод возвращает все дорожные знаки с группировкой по категориям
+    /// - Returns: массив категорий знаков
+    public static func getSigns() throws -> [SignCategory] {
+        try shared.dataService.loadSigns()
+    }
+    
+    /// Метод возвращает всю дорожную разметку с группировкой по категориям
+    /// - Returns: массив категорий разметки
+    public static func getMarkups() throws -> [MarkupCategory] {
+        try shared.dataService.loadMarkups()
+    }
 }

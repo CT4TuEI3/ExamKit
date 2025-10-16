@@ -11,8 +11,11 @@ public enum ExamKitError: Error, LocalizedError {
     case bundleNotFound
     case ticketsDirectoryNotFound
     case topicsDirectoryNotFound
+    case signsFileNotFound
+    case markupFileNotFound
     case imageNotFound(String)
     case invalidData
+    
 
     public var errorDescription: String? {
         switch self {
@@ -22,6 +25,10 @@ public enum ExamKitError: Error, LocalizedError {
             return "Не найдена директория билетов"
         case .topicsDirectoryNotFound:
             return "Не найдена директория тем"
+        case .signsFileNotFound:
+            return "Файл signs.json не найден"
+        case .markupFileNotFound:
+            return "Файл markup.json не найден"
         case .imageNotFound(let name):
             return "Изображение не найдено: \(name)"
         case .invalidData:
